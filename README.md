@@ -885,17 +885,14 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ---
 
-## 📞 Soporte
+## 💻 Desarrollado por:
 
-- 📧 Email: [Abrir Issue](https://github.com/yourusername/truco-engine/issues)
-- 📖 Documentación: Ver [swagger.yaml](swagger.yaml)
-- 💬 Discusiones: [GitHub Discussions](https://github.com/yourusername/truco-engine/discussions)
+- 📧 Email: [lms.segovia86@gmail.com](mailto:lms.segovia86@gmail.com)
+- 📖 Documentación: Ver [swagger.yaml](https://editor.swagger.io/)
 
 ---
 
 <div align="center">
-
-**Hecho con ❤️ para la comunidad de Truco**
 
 [⬆ Volver arriba](#-truco-engine)
 
