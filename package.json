@@ -1,0 +1,43 @@
+{
+  "name": "truco-engine",
+  "version": "1.0.0",
+  "description": "A complete TypeScript library for implementing Truco Argentino card game with support for 1v1, 2v2, and 3v3 formats",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"No tests specified yet\" && exit 0"
+  },
+  "keywords": [
+    "truco",
+    "truco-argentino",
+    "card-game",
+    "game-engine",
+    "typescript",
+    "spanish-deck",
+    "argentina",
+    "envido",
+    "flor",
+    "multiplayer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LumDev86/truco-engine.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

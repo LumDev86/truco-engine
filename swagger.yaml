@@ -1,0 +1,876 @@
+openapi: 3.0.0
+info:
+  title: Truco Argentino Game Engine API
+  description: |
+    Complete API documentation for the Truco Argentino Game Engine library.
+    This is a TypeScript library documented as if it were a REST API for clarity.
+
+    **Note:** This library is not a server - these endpoints are conceptual
+    representations of the library's functions and methods.
+  version: 1.0.0
+  contact:
+    name: Truco Engine Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Conceptual API server
+
+tags:
+  - name: Deck
+    description: Deck creation and management
+  - name: Hierarchy
+    description: Card hierarchy and comparison
+  - name: Envido
+    description: Envido calculation
+  - name: Flor
+    description: Flor calculation
+  - name: Truco
+    description: Truco state management
+  - name: Match
+    description: Match engine operations
+  - name: Players
+    description: Player management
+  - name: Teams
+    description: Team management
+
+paths:
+  /deck/create:
+    get:
+      tags:
+        - Deck
+      summary: Create a new Spanish deck
+      description: Creates a full Spanish deck with 40 cards
+      operationId: createDeck
+      responses:
+        '200':
+          description: Deck created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+              example:
+                - value: 1
+                  suit: "espada"
+                  id: "1-espada"
+                - value: 2
+                  suit: "espada"
+                  id: "2-espada"
+
+  /deck/shuffle:
+    post:
+      tags:
+        - Deck
+      summary: Shuffle a deck
+      description: Shuffles a deck using Fisher-Yates algorithm
+      operationId: shuffleDeck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deck:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Deck shuffled successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+
+  /deck/deal:
+    post:
+      tags:
+        - Deck
+      summary: Deal cards to players
+      description: Distributes cards from deck to players
+      operationId: dealCards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deck:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+                playerCount:
+                  type: integer
+                  minimum: 2
+                  maximum: 6
+                cardsPerPlayer:
+                  type: integer
+                  default: 3
+              required:
+                - deck
+                - playerCount
+      responses:
+        '200':
+          description: Cards dealt successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Array of hands (one per player)
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+
+  /hierarchy/rank:
+    post:
+      tags:
+        - Hierarchy
+      summary: Get card rank
+      description: Returns the rank of a card in the official Truco hierarchy
+      operationId: getCardRank
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Card rank retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rank:
+                    type: integer
+                    description: Lower number = stronger card
+              example:
+                rank: 1
+
+  /hierarchy/compare:
+    post:
+      tags:
+        - Hierarchy
+      summary: Compare two cards
+      description: Compares two cards and determines winner
+      operationId: compareCards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card1:
+                  $ref: '#/components/schemas/Card'
+                card2:
+                  $ref: '#/components/schemas/Card'
+              required:
+                - card1
+                - card2
+      responses:
+        '200':
+          description: Comparison result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: integer
+                    description: Positive if card1 wins, negative if card2 wins, 0 if tie
+                  winner:
+                    $ref: '#/components/schemas/Card'
+
+  /hierarchy/winning-card:
+    post:
+      tags:
+        - Hierarchy
+      summary: Get winning card
+      description: Finds the strongest card from an array
+      operationId: getWinningCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cards:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Winning card found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  winner:
+                    $ref: '#/components/schemas/Card'
+                  isTie:
+                    type: boolean
+
+  /envido/calculate:
+    post:
+      tags:
+        - Envido
+      summary: Calculate envido score
+      description: Calculates the envido score for a hand
+      operationId: calculateEnvido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hand:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+              required:
+                - hand
+      responses:
+        '200':
+          description: Envido calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvidoResult'
+              example:
+                score: 33
+                cards:
+                  - value: 7
+                    suit: "espada"
+                    id: "7-espada"
+                  - value: 6
+                    suit: "espada"
+                    id: "6-espada"
+
+  /envido/calculate-team:
+    post:
+      tags:
+        - Envido
+      summary: Calculate team envido
+      description: Calculates best envido score among team members
+      operationId: calculateTeamEnvido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hands:
+                  type: array
+                  description: Array of hands from team members
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Team envido calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvidoResult'
+
+  /envido/call:
+    post:
+      tags:
+        - Envido
+      summary: Call envido bet
+      description: Makes an envido bet (Envido, Real Envido, or Falta Envido)
+      operationId: callEnvido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  $ref: '#/components/schemas/EnvidoBet'
+                currentBets:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EnvidoBet'
+              required:
+                - bet
+            example:
+              bet: "ENVIDO"
+              currentBets: []
+      responses:
+        '200':
+          description: Bet accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /envido/points:
+    post:
+      tags:
+        - Envido
+      summary: Calculate envido points at stake
+      description: Calculates total points at stake for current envido bets
+      operationId: getEnvidoPoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bets:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EnvidoBet'
+                pointsToWin:
+                  type: integer
+                  default: 30
+                winnerScore:
+                  type: integer
+              required:
+                - bets
+            example:
+              bets: ["ENVIDO", "REAL_ENVIDO"]
+              pointsToWin: 30
+              winnerScore: 20
+      responses:
+        '200':
+          description: Points calculated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: integer
+                  isFaltaEnvido:
+                    type: boolean
+              example:
+                points: 5
+                isFaltaEnvido: false
+
+  /flor/check:
+    post:
+      tags:
+        - Flor
+      summary: Check if hand has flor
+      description: Determines if a hand has flor (3 cards of same suit)
+      operationId: hasFlor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hand:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Flor check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasFlor:
+                    type: boolean
+
+  /flor/calculate:
+    post:
+      tags:
+        - Flor
+      summary: Calculate flor score
+      description: Calculates flor score if hand has flor
+      operationId: calculateFlor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hand:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Flor calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlorResult'
+              example:
+                score: 38
+                suit: "espada"
+                cards:
+                  - value: 7
+                    suit: "espada"
+                    id: "7-espada"
+                  - value: 6
+                    suit: "espada"
+                    id: "6-espada"
+                  - value: 5
+                    suit: "espada"
+                    id: "5-espada"
+
+  /flor/calculate-team:
+    post:
+      tags:
+        - Flor
+      summary: Calculate team flor
+      description: Finds best flor among team members
+      operationId: calculateTeamFlor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hands:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Card'
+      responses:
+        '200':
+          description: Team flor calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlorResult'
+                nullable: true
+
+  /truco/next-state:
+    post:
+      tags:
+        - Truco
+      summary: Get next truco state
+      description: Advances to the next truco state
+      operationId: nextTrucoState
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentState:
+                  $ref: '#/components/schemas/TrucoState'
+      responses:
+        '200':
+          description: Next state retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrucoState'
+                  points:
+                    type: integer
+
+  /truco/points:
+    get:
+      tags:
+        - Truco
+      summary: Get truco points
+      description: Returns point value for a truco state
+      operationId: getTrucoPoints
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrucoState'
+      responses:
+        '200':
+          description: Points retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: integer
+
+  /match/create:
+    post:
+      tags:
+        - Match
+      summary: Create a new match
+      description: Creates a new match with specified configuration
+      operationId: createMatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchConfig'
+            examples:
+              1v1:
+                summary: 1v1 Match
+                value:
+                  teams:
+                    - id: "team1"
+                      playerIds: ["player1"]
+                      name: "Alice"
+                    - id: "team2"
+                      playerIds: ["player2"]
+                      name: "Bob"
+                  pointsToWin: 30
+              2v2:
+                summary: 2v2 Match
+                value:
+                  teams:
+                    - id: "team1"
+                      playerIds: ["p1", "p2"]
+                      name: "Team A"
+                    - id: "team2"
+                      playerIds: ["p3", "p4"]
+                      name: "Team B"
+                  pointsToWin: 30
+      responses:
+        '201':
+          description: Match created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchState'
+
+  /match/{matchId}/play:
+    post:
+      tags:
+        - Match
+      summary: Play a card
+      description: Player plays a card in the match
+      operationId: playCard
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId:
+                  type: string
+                cardId:
+                  type: string
+              required:
+                - playerId
+                - cardId
+            example:
+              playerId: "player1"
+              cardId: "1-espada"
+      responses:
+        '200':
+          description: Card played successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchState'
+
+  /match/{matchId}/state:
+    get:
+      tags:
+        - Match
+      summary: Get match state
+      description: Retrieves current state of the match
+      operationId: getMatchState
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Match state retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchState'
+
+  /match/{matchId}/winner:
+    get:
+      tags:
+        - Match
+      summary: Get match winner
+      description: Returns the winning team if match is finished
+      operationId: getMatchWinner
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Winner retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+                nullable: true
+
+components:
+  schemas:
+    Card:
+      type: object
+      required:
+        - value
+        - suit
+        - id
+      properties:
+        value:
+          type: integer
+          description: Card value (1-7, 10-12)
+          enum: [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]
+        suit:
+          type: string
+          description: Card suit
+          enum: ["espada", "basto", "oro", "copa"]
+        id:
+          type: string
+          description: Unique card identifier
+          example: "1-espada"
+
+    Player:
+      type: object
+      required:
+        - id
+        - teamId
+        - hand
+      properties:
+        id:
+          type: string
+          description: Unique player identifier
+        teamId:
+          type: string
+          description: Team this player belongs to
+        hand:
+          type: array
+          description: Cards in player's hand
+          items:
+            $ref: '#/components/schemas/Card'
+        name:
+          type: string
+          description: Optional player name
+
+    Team:
+      type: object
+      required:
+        - id
+        - playerIds
+        - score
+      properties:
+        id:
+          type: string
+          description: Unique team identifier
+        playerIds:
+          type: array
+          description: Players in this team
+          items:
+            type: string
+        score:
+          type: integer
+          description: Current team score
+          minimum: 0
+        name:
+          type: string
+          description: Optional team name
+
+    EnvidoResult:
+      type: object
+      required:
+        - score
+        - cards
+      properties:
+        score:
+          type: integer
+          description: Calculated envido score
+          minimum: 0
+          maximum: 33
+        cards:
+          type: array
+          description: Cards used in calculation
+          items:
+            $ref: '#/components/schemas/Card'
+
+    EnvidoBet:
+      type: string
+      description: Envido betting options
+      enum:
+        - NONE
+        - ENVIDO
+        - REAL_ENVIDO
+        - FALTA_ENVIDO
+      example: ENVIDO
+
+    FlorResult:
+      type: object
+      required:
+        - score
+        - cards
+        - suit
+      properties:
+        score:
+          type: integer
+          description: Calculated flor score
+        cards:
+          type: array
+          description: The three cards that form flor
+          items:
+            $ref: '#/components/schemas/Card'
+        suit:
+          type: string
+          description: Suit of the flor
+          enum: ["espada", "basto", "oro", "copa"]
+
+    TrucoState:
+      type: string
+      description: Current truco state
+      enum:
+        - NORMAL
+        - TRUCO
+        - RETRUCO
+        - VALE4
+
+    CardPlay:
+      type: object
+      required:
+        - playerId
+        - card
+        - teamId
+      properties:
+        playerId:
+          type: string
+        card:
+          $ref: '#/components/schemas/Card'
+        teamId:
+          type: string
+
+    RoundResult:
+      type: object
+      required:
+        - winnerTeamId
+        - winningCard
+        - playedCards
+        - isTie
+      properties:
+        winnerTeamId:
+          type: string
+          nullable: true
+          description: ID of winning team, null if tie
+        winningCard:
+          $ref: '#/components/schemas/Card'
+          nullable: true
+        playedCards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardPlay'
+        isTie:
+          type: boolean
+
+    MatchConfig:
+      type: object
+      required:
+        - teams
+      properties:
+        teams:
+          type: array
+          description: Teams in the match
+          minItems: 2
+          maxItems: 2
+          items:
+            type: object
+            required:
+              - id
+              - playerIds
+            properties:
+              id:
+                type: string
+              playerIds:
+                type: array
+                items:
+                  type: string
+              name:
+                type: string
+        pointsToWin:
+          type: integer
+          description: Points needed to win match
+          default: 30
+          minimum: 1
+
+    MatchState:
+      type: object
+      required:
+        - players
+        - teams
+        - currentRound
+        - roundResults
+        - playsInCurrentRound
+        - trucoState
+        - isFinished
+      properties:
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+        currentRound:
+          type: integer
+          description: Current round number (0-2)
+          minimum: 0
+          maximum: 2
+        roundResults:
+          type: array
+          description: Results of completed rounds
+          items:
+            $ref: '#/components/schemas/RoundResult'
+        playsInCurrentRound:
+          type: array
+          description: Cards played in current round
+          items:
+            $ref: '#/components/schemas/CardPlay'
+        trucoState:
+          $ref: '#/components/schemas/TrucoState'
+        isFinished:
+          type: boolean
+          description: Whether match has ended
